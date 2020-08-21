@@ -21,9 +21,9 @@ location.append(0)
 q = deque()
 q.appendleft(location)
 visit[location[0][0]][location[0][1]][location[1][0]][location[1][1]] = True
-while True:
+while len(q) != 0:
     loc = q.pop()
-    if loc[2] > 10:
+    if loc[2] >= 10:
         break
     for move_element in move:
         check_coin1 = False
@@ -38,13 +38,15 @@ while True:
         if check_coin1 or check_coin2:
             if check_coin1 and check_coin2:
                 continue
-            print(coin1, coin2)
             print(loc[2] + 1)
             sys.exit()
         else:
-            if board[coin1[0]][coin1[1]] != '#':
+            if board[coin1[0]][coin1[1]] == '#':
                 coin1 = loc[0]
-            if board[coin2[0]][coin2[1]] != '#':
+            if board[coin2[0]][coin2[1]] == '#':
+                coin2 = loc[1]
+            if coin1 == coin2:
+                coin1 = loc[0]
                 coin2 = loc[1]
             if not visit[coin1[0]][coin1[1]][coin2[0]][coin2[1]]:
                 visit[coin1[0]][coin1[1]][coin2[0]][coin2[1]] = True
