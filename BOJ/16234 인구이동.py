@@ -1,46 +1,59 @@
 import sys
-import queue
+from collections import deque
 
-def BFS(visit, loc):
-    move = [[1, 0], [-1, 0], [0, 1], [0, -1]]
-    save_location = [[loc[0], loc[1]]]
-    sum = Population[loc[0]][loc[1]]
-    q = queue.Queue()
-    q.put([loc[0], loc[1]])
-    while q.qsize() != 0:
-        location = q.get()
-        for move_element in move:
-            loc_x = location[1] + move_element[1]
-            loc_y = location[0] + move_element[0]
-            if loc_x >= 0 and loc_x < n and loc_y >= 0 and loc_y < n:
-                if not visit[loc_y][loc_x]:
-                    dif = abs(Population[location[0]][location[1]] - Population[loc_y][loc_x])
-                    if dif >= L and dif <= R:
-                        visit[loc_y][loc_x] = True
-                        sum += Population[loc_y][loc_x]
-                        q.put([loc_y, loc_x])
-                        save_location.append([loc_y, loc_x])
-    return save_location, sum
+def BFS(location):
+    global l, r
+    check = [[1, 0], [0, 1], [-1, 0], [0, -1]]
+    open = [[location[0], location[1]]]
+    sum = 0
+    q = deque()
+    q.appendleft([location[0], location[1]])
+    while len(q) != 0:
+        loc = q.pop()
+        for check_element in check:
+            loc_y = loc[0] + check_element[0]
+            loc_x = loc[1] + check_element[1]
+            if loc_y < n and loc_y >= 0 and loc_x < n and loc_x >= 0 and not visit[loc_y][loc_x]:
+                differ = abs(people[loc_y][loc_x] - people[loc[0]][loc[1]])
+                if differ >= l and differ <= r:
+                    open.append([loc_y, loc_x])
+                    visit[loc_y][loc_x] = True
+                    q.appendleft([loc_y, loc_x])
+    for open_element in open:
+        sum += people[open_element[0]][open_element[1]]
+    for open_element in open:
+        people[open_element[0]][open_element[1]] = sum // len(open)
 
-def Population_Migration():
-    visit = [[False for i in range(n)] for j in range(n)]
+def check_differ(location):
+    global l, r
+    check = [[1, 0], [0, 1], [-1, 0], [0, -1]]
+    for check_element in check:
+        loc_y = location[0] + check_element[0]
+        loc_x = location[1] + check_element[1]
+
+        if loc_y < n and loc_y >= 0 and loc_x < n and loc_x >= 0 and not visit[loc_y][loc_x]:
+            differ = abs(people[loc_y][loc_x] - people[location[0]][location[1]])
+
+            if differ >= l and differ <= r:
+                return True
+
+    return False
+n, l, r = map(int, sys.stdin.readline().split())
+people = [list(map(int, sys.stdin.readline().split())) for i in range(n)]
+count = 0
+
+while True:
     check = False
+    visit = [[False for i in range(n)] for j in range(n)]
     for i in range(n):
         for j in range(n):
             if not visit[i][j]:
-                visit[i][j] = True
-                migration, sum = BFS(visit, [i, j])
-                length = len(migration)
-                if length > 1:
+                if check_differ([i, j]):
                     check = True
-                    for migration_element in migration:
-                        Population[migration_element[0]][migration_element[1]] = sum // length
-    return check
-
-
-n, L, R = map(int, sys.stdin.readline().split())
-Population = [list(map(int, sys.stdin.readline().split())) for i in range(n)]
-count = 0
-while Population_Migration():
+                    visit[i][j] = True
+                    BFS([i, j])
+            visit[i][j] = True
+    if not check:
+        print(count)
+        break
     count += 1
-print(count)
