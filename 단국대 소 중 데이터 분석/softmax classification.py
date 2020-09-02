@@ -5,10 +5,12 @@ import numpy as np
 def get_train_data():
     df = pd.read_csv('train.csv')
     head = df.columns.values
-    celestial_data = df.values[:,1:-1]
-    Classification_data = df.values[:,-1]
+    test_cel = df.values[:100,1:-1]
+    test_class = df.values[:100, -1]
+    celestial_data = df.values[100:,1:-1]
+    Classification_data = df.values[100:,-1]
 
-    return celestial_data, Classification_data
+    return test_cel, test_class, celestial_data, Classification_data
 
 def get_test_data():
     df = pd.read_csv('test.csv')
@@ -24,7 +26,7 @@ def make_submission(classification):
     file_name = "submission.csv"
     np.savetxt(file_name, data, fmt="%s", delimiter=",")
 
-celestial_data, classification_data = get_train_data()
+test_cel, test_class, celestial_data, classification_data = get_train_data()
 mean = celestial_data.mean(axis=0)
 std = celestial_data.std(axis=0)
 celestial_data = (celestial_data - mean) / std
@@ -60,8 +62,12 @@ with tf.Session() as sess:
             print("Step: {:5}\tLoss: {:.3f}\tAcc: {:.2f}".format(step, loss, acc))
 
 
-    pred = sess.run(prediction, feed_dict = {celestial : celestial_data})
-    print(pred)
+    # pred = sess.run(prediction, feed_dict = {celestial : celestial_data})
+    # print(pred)
+
+    test_cel = (test_cel - mean) / std
+    acc = sess.run(accuracy, feed_dict = {celestial : celestial_data, classification : classification_data})
+    print(acc)
 
     test_data = get_test_data()
     test_data = (test_data - mean) / std
