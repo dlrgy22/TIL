@@ -1,8 +1,8 @@
 import pandas as pd
 import tensorflow as tf
-from sklearn.tree import DecisionTreeClassifier
-import numpy as np
+
 train = pd.read_csv('train.csv', index_col=0)
+
 test = pd.read_csv('test.csv', index_col=0)
 sample_submission = pd.read_csv('sample_submission.csv', index_col=0)
 train_x = train.drop(columns='class', axis=1) # class 열을 삭제한 새로운 객체
@@ -13,13 +13,16 @@ mean = train_x.mean(axis=0)
 std = train_x.std(axis=0)
 
 train_x = (train_x - mean) / std
+
 test_x = (test_x - mean) / std
 nb_classes = 3
-print(test_x.shape)
+
 X = tf.placeholder(tf.float32, [None, 18])
 Y = tf.placeholder(tf.int32, [None])
+
 Y_one_hot = tf.one_hot(Y, nb_classes)
 Y_one_hot = tf.reshape(Y_one_hot, [-1, nb_classes])
+
 W = tf.get_variable("weight", shape=[18, nb_classes], initializer=tf.contrib.layers.xavier_initializer())
 # W = tf.Variable(tf.random_normal([18, nb_classes]), name="weight")
 b = tf.Variable(tf.random_normal([nb_classes]), name="bias")

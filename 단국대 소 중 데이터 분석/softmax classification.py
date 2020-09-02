@@ -1,8 +1,6 @@
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 import pandas as pd
 import numpy as np
-
-tf.compat.v1.disable_eager_execution()
 
 def get_train_data():
     df = pd.read_csv('train.csv')
@@ -27,15 +25,17 @@ def make_submission(classification):
     np.savetxt(file_name, data, fmt="%s", delimiter=",")
 
 celestial_data, classification_data = get_train_data()
-print(celestial_data[1])
-print(celestial_data[1][1])
+mean = celestial_data.mean(axis=0)
+std = celestial_data.std(axis=0)
+celestial_data = (celestial_data - mean) / std
+
 nb_classes = 3
 celestial = tf.placeholder(tf.float32, [None, 18])
 classification = tf.placeholder(tf.int32, [None])
 classification_one_hot = tf.one_hot(classification, nb_classes)
 classification_one_hot = tf.reshape(classification_one_hot, [-1, nb_classes])
 
-W = tf.Variable(tf.random_normal([18, nb_classes]), name = 'weight')
+W = tf.get_variable("weight", shape=[18, nb_classes], initializer=tf.contrib.layers.xavier_initializer())
 b = tf.Variable(tf.random_normal([nb_classes]), name = 'bias')
 
 logit = tf.matmul(celestial, W) + b
@@ -43,8 +43,11 @@ H = tf.nn.softmax(logit)
 
 cost_i = tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels = classification_one_hot)
 cost = tf.reduce_mean(cost_i)
-optimizer = tf.train.GradientDescentOptimizer(learning_rate = 0.005).minimize(cost)
+optimizer = tf.train.AdamOptimizer(learning_rate=0.1).minimize(cost)
 prediction = tf.argmax(H, 1)
+correct_prediction = tf.equal(prediction, tf.argmax(classification_one_hot, 1)) # 예측값과 정답이 얼마나 일치하는가
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32)) # 정확도
+
 
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
@@ -53,13 +56,15 @@ with tf.Session() as sess:
 
         sess.run(optimizer, feed_dict = {celestial : celestial_data, classification : classification_data})
         if step % 100 == 0:
-            print(step, sess.run(cost, feed_dict = {celestial : celestial_data, classification : classification_data}))
+            loss, acc = sess.run([cost, accuracy], feed_dict = {celestial : celestial_data, classification : classification_data})
+            print("Step: {:5}\tLoss: {:.3f}\tAcc: {:.2f}".format(step, loss, acc))
 
 
     pred = sess.run(prediction, feed_dict = {celestial : celestial_data})
     print(pred)
 
     test_data = get_test_data()
+    test_data = (test_data - mean) / std
     pred = sess.run(prediction, feed_dict = {celestial : test_data})
     make_submission(pred)
 
