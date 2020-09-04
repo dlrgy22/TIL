@@ -54,7 +54,7 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32)) # 정확도
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 
-    for step in range(2000):
+    for step in range(400):
 
         sess.run(optimizer, feed_dict = {celestial : celestial_data, classification : classification_data})
         if step % 100 == 0:
@@ -66,7 +66,7 @@ with tf.Session() as sess:
     # print(pred)
 
     test_cel = (test_cel - mean) / std
-    acc = sess.run(accuracy, feed_dict = {celestial : celestial_data, classification : classification_data})
+    acc = sess.run(accuracy, feed_dict = {celestial : test_cel, classification : test_class})
     print(acc)
 
     test_data = get_test_data()
