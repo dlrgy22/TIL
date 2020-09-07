@@ -40,7 +40,7 @@ class Model:
         self._build_net()
 
     def _build_net(self):
-        parm = [[tf.contrib.layers.variance_scaling_initializer(), 36, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 54, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 36, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 54, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 36, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 54, 0.0005], [tf.contrib.layers.xavier_initializer(), 36, 0.0005], [tf.contrib.layers.xavier_initializer(), 54, 0.0005]]
+        parm = [[tf.contrib.layers.variance_scaling_initializer(), 36, 0.001], [tf.contrib.layers.variance_scaling_initializer(), 54, 0.001], [tf.contrib.layers.variance_scaling_initializer(), 36, 0.001], [tf.contrib.layers.variance_scaling_initializer(), 54, 0.001], [tf.contrib.layers.variance_scaling_initializer(), 36, 0.001], [tf.contrib.layers.variance_scaling_initializer(), 54, 0.001], [tf.contrib.layers.xavier_initializer(), 36, 0.001], [tf.contrib.layers.xavier_initializer(), 54, 0.001]]
 
         with tf.variable_scope(self.name):
             self.training = tf.placeholder(tf.bool)
@@ -111,7 +111,7 @@ class Model:
         return self.sess.run(self.accuracy, feed_dict={self.celestial: test_cel, self.classification: test_class, self.keep_prob: 1})
 
     def train(self, cel_batch, class_batch):
-        return self.sess.run([self.cost, self.optimizer], feed_dict={self.celestial: cel_batch, self.classification: class_batch, self.keep_prob: 0.5})
+        return self.sess.run([self.cost, self.optimizer], feed_dict={self.celestial: cel_batch, self.classification: class_batch, self.keep_prob: 0.7})
 
 
 
