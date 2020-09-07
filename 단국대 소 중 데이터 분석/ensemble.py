@@ -33,12 +33,14 @@ def make_submission(classification):
 
 class Model:
 
-    def __init__(self, sess, name):
+    def __init__(self, sess, name, idx):
         self.sess = sess
         self.name = name
+        self.idx = idx
         self._build_net()
 
     def _build_net(self):
+        parm = [[tf.contrib.layers.variance_scaling_initializer(), 36, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 54, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 36, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 54, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 36, 0.0005], [tf.contrib.layers.variance_scaling_initializer(), 54, 0.0005], [tf.contrib.layers.xavier_initializer(), 36, 0.0005], [tf.contrib.layers.xavier_initializer(), 54, 0.0005]]
 
         with tf.variable_scope(self.name):
             self.training = tf.placeholder(tf.bool)
@@ -50,33 +52,50 @@ class Model:
 
             self.keep_prob = tf.placeholder(tf.float32)
 
-            size = 512
-            W1 = tf.get_variable("W1", shape=[18, size], initializer=tf.contrib.layers.xavier_initializer())
+            size = parm[self.idx][1]
+            W1 = tf.get_variable("W1", shape=[18, size], initializer=parm[self.idx][0])
             b1 = tf.Variable(tf.random_normal([size]))
-            L1 = tf.nn.relu(tf.matmul(self.celestial, W1) + b1)
-            L1 = tf.nn.dropout(L1, keep_prob=self.keep_prob)
 
-            W2 = tf.get_variable("W2", shape=[size, size], initializer=tf.contrib.layers.xavier_initializer())
+            if self.idx == 0 or 1:
+                L1 = tf.nn.relu(tf.matmul(self.celestial, W1) + b1)
+            elif self.idx == 2 or 3:
+                L1 = tf.nn.leaky_relu(tf.matmul(self.celestial, W1) + b1)
+            elif self.idx == 4 or 5:
+                L1 = tf.nn.elu(tf.matmul(self.celestial, W1) + b1)
+            else:
+                L1 = tf.sigmoid(tf.matmul(self.celestial, W1) + b1)
+
+            L1 = tf.nn.dropout(L1, keep_prob=self.keep_prob)
+            W2 = tf.get_variable("W2", shape=[size, size], initializer=parm[self.idx][0])
             b2 = tf.Variable(tf.random_normal([size]))
-            L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
+
+            if self.idx == 0 or 1:
+                L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
+            elif self.idx == 2 or 3:
+                L2 = tf.nn.leaky_relu(tf.matmul(L1, W2) + b2)
+            elif self.idx == 4 or 5:
+                L2 = tf.nn.elu(tf.matmul(L1, W2) + b2)
+            else:
+                L2 = tf.nn.sigmoid(tf.matmul(L1, W2) + b2)
+
             L2 = tf.nn.dropout(L2, keep_prob=self.keep_prob)
 
-            W3 = tf.get_variable("W3", shape=[size, size], initializer=tf.contrib.layers.xavier_initializer())
-            b3 = tf.Variable(tf.random_normal([size]))
-            L3 = tf.nn.relu(tf.matmul(L2, W3) + b3)
-            L3 = tf.nn.dropout(L3, keep_prob=self.keep_prob)
+            # W3 = tf.get_variable("W3", shape=[size, size], initializer=tf.contrib.layers.xavier_initializer())
+            # b3 = tf.Variable(tf.random_normal([size]))
+            # L3 = tf.nn.relu(tf.matmul(L2, W3) + b3)
+            # L3 = tf.nn.dropout(L3, keep_prob=self.keep_prob)
+            #
+            # W4 = tf.get_variable("W4", shape=[size, size], initializer=tf.contrib.layers.xavier_initializer())
+            # b4 = tf.Variable(tf.random_normal([size]))
+            # L4 = tf.nn.relu(tf.matmul(L3, W4) + b4)
+            # L4 = tf.nn.dropout(L4, keep_prob=self.keep_prob)
 
-            W4 = tf.get_variable("W4", shape=[size, size], initializer=tf.contrib.layers.xavier_initializer())
-            b4 = tf.Variable(tf.random_normal([size]))
-            L4 = tf.nn.relu(tf.matmul(L3, W4) + b4)
-            L4 = tf.nn.dropout(L4, keep_prob=self.keep_prob)
-
-            W5 = tf.get_variable("W5", shape=[size, 3], initializer=tf.contrib.layers.xavier_initializer())
+            W5 = tf.get_variable("W5", shape=[size, 3], initializer=parm[self.idx][0])
             b5 = tf.Variable(tf.random_normal([3]))
-            H = tf.matmul(L4, W5) + b5
+            H = tf.matmul(L2, W5) + b5
 
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=H, labels=self.classification_one_hot))
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(self.cost)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=parm[self.idx][2]).minimize(self.cost)
         self.soft = tf.nn.softmax(H)
         self.prediction = tf.argmax(H, 1)
         correct_prediction = tf.equal(tf.argmax(H, 1), tf.argmax(self.classification_one_hot, 1))
@@ -101,23 +120,24 @@ mean = celestial_data.mean(axis=0)
 std = celestial_data.std(axis=0)
 celestial_data = (celestial_data - mean) / std
 test_cel = (test_cel - mean) / std
-epochs = 40
-batch_size = 500
+epochs = 500
+batch_size = 100
 total_batch = int(len(celestial_data) / batch_size)
 shuffle = True
 
 sess = tf.Session()
 
 models = []
-num_models = 10
+num_models = 8
 for m in range(num_models):
-    models.append(Model(sess, "model" + str(m)))
+    models.append(Model(sess, "model" + str(m), m))
 sess.run(tf.global_variables_initializer())
 
 print("Learning start !")
 
 for epoch in range(epochs):
     avg_cost_list = np.zeros(len(models))
+    acc_list = np.zeros(len(models))
     if shuffle:
         utils.shuffle(celestial_data, classification_data)
     for i in range(batch_size):
@@ -128,9 +148,12 @@ for epoch in range(epochs):
         class_batch = classification_data[start:end]
         for m_idx, m in enumerate(models):
             c, _ = m.train(cel_batch, class_batch)
+            acc = m.get_accuarcy(test_cel, test_class)
             avg_cost_list[m_idx] += c / total_batch
+            acc_list[m_idx] += acc
 
-    print('Epoch:', '%04d' % (epoch + 1), 'cost =',avg_cost_list )
+
+    print('Epoch:', '%04d' % (epoch + 1), 'cost =',avg_cost_list , 'acc = ', acc_list)
 print("Learning finish")
 
 test_size = len(test_cel)
