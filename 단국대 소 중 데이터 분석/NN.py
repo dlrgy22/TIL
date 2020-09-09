@@ -1,9 +1,11 @@
 import tensorflow as tf
 import pandas as pd
 import numpy as np
+from imblearn.under_sampling import *
+from imblearn.over_sampling import *
 from sklearn import utils
 
-
+tf.set_random_seed(777)  # reproducibility
 def get_train_data():
     df = pd.read_csv('train.csv')
     head = df.columns.values
@@ -32,27 +34,51 @@ def make_submission(classification):
 
 
 test_cel, test_class, celestial_data, classification_data = get_train_data()
+#X_samp, y_samp = RandomUnderSampler(random_state=0).fit_sample(celestial_data, classification_data)
+#X_samp, y_samp = RandomOverSampler(random_state=0).fit_sample(celestial_data, classification_data)
+#X_samp, y_samp = ADASYN(random_state=0).fit_sample(celestial_data, classification_data)
+X_samp, y_samp = SMOTE(random_state=4).fit_sample(celestial_data, classification_data)
+#X_samp, y_samp = SMOTETomek(random_state=4).fit_sample(celestial_data, classification_data)
+
+zero = 0
+one = 0
+two = 0
+for i in range(len(y_samp)):
+    if y_samp[i] == 0:
+        zero += 1
+    elif y_samp[i] == 1:
+        one += 1
+    else:
+        two += 1
+print(zero, one, two)
+s = np.arange(X_samp.shape[0])
+np.random.shuffle(s)
+X_samp = X_samp[s]
+y_samp = y_samp[s]
+test_cel = X_samp[:1000]
+test_class = y_samp[:1000]
 mean = celestial_data.mean(axis=0)
 std = celestial_data.std(axis=0)
-celestial_data = (celestial_data - mean) / std
+X_samp = (X_samp - mean) / std
 test_cel = (test_cel - mean) / std
+celestial_data = (celestial_data - mean) / std
 nb_classes = 3
 
 celestial = tf.placeholder(tf.float32, [None, 18])
 classification = tf.placeholder(tf.int32, [None])
 classification_one_hot = tf.one_hot(classification, nb_classes)
 classification_one_hot = tf.reshape(classification_one_hot, [-1, nb_classes])
-time = [100000]
+time = [5000]
 result = []
 keep_prob = tf.placeholder(tf.float32)
-size = 9
+size = 18
 W1 = tf.get_variable("W1", shape=[18, size], initializer=tf.contrib.layers.variance_scaling_initializer())
 b1 = tf.Variable(tf.random_normal([size]))
 L1 = tf.nn.relu(tf.matmul(celestial, W1) + b1)
 #L1 = tf.nn.dropout(L1, keep_prob=keep_prob)
 
-W2 = tf.get_variable("W2", shape=[size, size], initializer=tf.contrib.layers.variance_scaling_initializer())
-b2 = tf.Variable(tf.random_normal([size]))
+W2 = tf.get_variable("W2", shape=[size, 9], initializer=tf.contrib.layers.variance_scaling_initializer())
+b2 = tf.Variable(tf.random_normal([9]))
 L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
 # L2 = tf.nn.dropout(L2, keep_prob=keep_prob)
 #
@@ -66,7 +92,7 @@ L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
 # L4 = tf.nn.leaky_relu(tf.matmul(L3, W4) + b4)
 # L4 = tf.nn.dropout(L4, keep_prob=keep_prob)
 
-W5 = tf.get_variable("W5", shape=[size, 3], initializer=tf.contrib.layers.xavier_initializer())
+W5 = tf.get_variable("W5", shape=[9, 3], initializer=tf.contrib.layers.xavier_initializer())
 b5 = tf.Variable(tf.random_normal([3]))
 H = tf.matmul(L2,W5) + b5
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=H, labels=classification_one_hot))
@@ -77,7 +103,10 @@ correct_prediction = tf.equal(tf.argmax(H, 1), tf.argmax(classification_one_hot,
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 for t in time:
     epochs = t
-
+    s = np.arange(X_samp.shape[0])
+    np.random.shuffle(s)
+    X_samp = X_samp[s]
+    y_samp = y_samp[s]
     #batch_size = 32
     #total_batch = int(len(celestial_data) / batch_size)=
 
@@ -103,17 +132,17 @@ for t in time:
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for epoch in range(epochs):
-            #if shuffle:
-                #utils.shuffle(celestial_data, classification_data)
 
-            feed_dict = {celestial: celestial_data, classification: classification_data}
+
+            feed_dict = {celestial: X_samp, classification: y_samp}
             c, _ = sess.run([cost, optimizer], feed_dict=feed_dict)
-            acc = sess.run(accuracy, feed_dict={celestial: test_cel, classification: test_class})
+            #acc = sess.run(accuracy, feed_dict={celestial: test_cel, classification: test_class})
 
             print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.9f}'.format(c))
-            print(acc)
+            #print(acc)
 
             if epoch % 5000 == 0:
+                acc = sess.run(accuracy, feed_dict={celestial: test_cel, classification: test_class})
                 train_acc = sess.run(accuracy, feed_dict={celestial: celestial_data, classification: classification_data})
                 result.append([epoch, c, acc, train_acc])
 
@@ -124,7 +153,40 @@ for t in time:
         result.append([t, c, acc, train_acc])
 
         print(result)
-        test_data = get_test_data()
-        test_data = (test_data - mean) / std
-        pred = sess.run(prediction, feed_dict={celestial: test_data, keep_prob : 1})
-        make_submission(pred)
+        pred = sess.run(prediction, feed_dict={celestial: celestial_data})
+        z_count =0
+        o_count = 0
+        t_count = 0
+        z_c = 0
+        o_c = 0
+        t_c = 0
+        zero = 0
+        one = 0
+        two = 0
+        for i in range(len(pred)):
+            if pred[i] == 0:
+                z_count += 1
+                if classification_data[i] == 0:
+                    z_c += 1
+                else:
+                    zero += 1
+            elif pred[i] == 1:
+                o_count += 1
+                if classification_data[i] == 1:
+                    o_c += 1
+                else:
+                    one += 1
+            else:
+                t_count += 1
+                if classification_data[i] == 2:
+                    t_c += 1
+                else:
+                    two += 1
+                #print(pred[i], classification_data[i])
+        print(z_c/z_count, o_c/o_count, t_c/t_count)
+        print(zero, one, two)
+
+        # test_data = get_test_data()
+        # test_data = (test_data - mean) / std
+        # pred = sess.run(prediction, feed_dict={celestial: test_data, keep_prob : 1})
+        # make_submission(pred)
