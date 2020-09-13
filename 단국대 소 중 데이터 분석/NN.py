@@ -89,10 +89,10 @@ celestial = tf.placeholder(tf.float32, [None, 18])
 classification = tf.placeholder(tf.int32, [None])
 classification_one_hot = tf.one_hot(classification, nb_classes)
 classification_one_hot = tf.reshape(classification_one_hot, [-1, nb_classes])
-time = [1000]
+time = [100000]
 result = []
 #keep_prob = tf.placeholder(tf.float32)
-size = 18
+size = 36
 W1 = tf.get_variable("W1", shape=[18, size], initializer=tf.contrib.layers.variance_scaling_initializer())
 b1 = tf.Variable(tf.random_normal([size]))
 L1 = tf.nn.relu(tf.matmul(celestial, W1) + b1)
@@ -162,7 +162,7 @@ for t in time:
             print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.9f}'.format(c))
             #print(acc)
 
-            if epoch % 5000 == 0:
+            if epoch % 10000 == 0:
                 acc = sess.run(accuracy, feed_dict={celestial: test_cel, classification: test_class})
                 train_acc = sess.run(accuracy, feed_dict={celestial: celestial_data, classification: classification_data})
                 pred = sess.run(prediction, feed_dict={celestial: celestial_data})
