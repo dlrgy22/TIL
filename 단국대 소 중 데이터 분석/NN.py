@@ -41,6 +41,31 @@ def make_submission(classification):
     file_name = "submission.csv"
     np.savetxt(file_name, data, fmt="%s", delimiter=",")
 
+def add_feature(x_train):
+    # first = [0, 1, 2, 3, 4]
+    # for i in range(len(first)):
+    #     for j in range(i, len(first)):
+    #         new = x_train[:,first[i]] - x_train[:,first[j]]
+    #         new = new.reshape(-1, 1)
+    #         x_train = np.hstack((x_train, new))
+    second = [6, 7, 8, 9, 10]
+    for i in range(len(second)):
+        for j in range(i, len(second)):
+            new = x_train[:, second[i]] - x_train[:, second[i]]
+            new = new.reshape(-1, 1)
+            x_train = np.hstack((x_train, new))
+
+    for i in range(5):
+        new = x_train[:, 6 + i] - x_train[:, i]
+        new = new.reshape(-1, 1)
+        x_train = np.hstack((x_train, new))
+
+    new = x_train[:, 11] - x_train[:, 12]
+    new = new.reshape(-1, 1)
+    x_train = np.hstack((x_train, new))
+
+    return x_train
+
 # def std_scale(mean, std, celestial_data, test_cel):
 #     for i in range(len(celestial_data)):
 #         print(np.shape(celestial_data), np.shape(mean),  np.shape(std))
@@ -53,6 +78,10 @@ def make_submission(classification):
 
 
 test_cel, test_class, celestial_data, classification_data = get_train_data()
+test_cel = add_feature(test_cel)
+celestial_data = add_feature(celestial_data)
+print(test_cel.shape)
+print(celestial_data.shape)
 #X_samp, y_samp = RandomUnderSampler(random_state=0).fit_sample(celestial_data, classification_data)
 #X_samp, y_samp = RandomOverSampler(random_state=0).fit_sample(celestial_data, classification_data)
 #X_samp, y_samp = ADASYN(random_state=0).fit_sample(celestial_data, classification_data)
@@ -85,15 +114,15 @@ test_cel = (test_cel - mean) / std
 
 nb_classes = 3
 
-celestial = tf.placeholder(tf.float32, [None, 18])
+celestial = tf.placeholder(tf.float32, [None, 39])
 classification = tf.placeholder(tf.int32, [None])
 classification_one_hot = tf.one_hot(classification, nb_classes)
 classification_one_hot = tf.reshape(classification_one_hot, [-1, nb_classes])
 time = [100000]
 result = []
 #keep_prob = tf.placeholder(tf.float32)
-size = 36
-W1 = tf.get_variable("W1", shape=[18, size], initializer=tf.contrib.layers.variance_scaling_initializer())
+size = 54
+W1 = tf.get_variable("W1", shape=[39, size], initializer=tf.contrib.layers.variance_scaling_initializer())
 b1 = tf.Variable(tf.random_normal([size]))
 L1 = tf.nn.relu(tf.matmul(celestial, W1) + b1)
 #L1 = tf.nn.dropout(L1, keep_prob=keep_prob)
@@ -118,7 +147,7 @@ b5 = tf.Variable(tf.random_normal([3]))
 H = tf.matmul(L2,W5) + b5
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=H, labels=classification_one_hot))
 #optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01).minimize(cost)
-optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(cost)
+optimizer = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(cost)
 prediction = tf.argmax(H, 1)
 correct_prediction = tf.equal(tf.argmax(H, 1), tf.argmax(classification_one_hot, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -197,7 +226,7 @@ for t in time:
                             o_c += 1
                         else:
                             t_c += 1
-                result.append([epoch, c, acc, train_acc, z_c/z_count, o_c/o_count, t_c/t_count, zero, one, two])
+                #result.append([epoch, c, acc, train_acc, z_c/z_count, o_c/o_count, t_c/t_count, zero, one, two])
                         # print(pred[i], classification_data[i])
 
         print('Learning Finished!')
