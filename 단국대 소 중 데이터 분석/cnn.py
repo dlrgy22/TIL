@@ -4,10 +4,13 @@ from sklearn import metrics
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Flatten
+from keras.layers import Dropout
+from keras.layers import BatchNormalization
 from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
 from keras.utils import to_categorical
 from keras import optimizers
+
 
 
 def make_submission(classification):
@@ -45,18 +48,21 @@ x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
 x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
 
 model = Sequential()
-model.add(Conv1D(filters=8, kernel_size = 3, activation = 'relu',input_shape=(18, 1)))
+model.add(Conv1D(filters=32, kernel_size = 3, activation = 'relu',input_shape=(18, 1)))
 model.add(MaxPooling1D(pool_size=2, padding = 'same'))
-model.add(Conv1D(filters=16, kernel_size = 3, activation = 'relu'))
+model.add(BatchNormalization())
+model.add(Conv1D(filters=64, kernel_size = 3, activation = 'relu',input_shape=(18, 1)))
 model.add(MaxPooling1D(pool_size=2, padding = 'same'))
-model.add(Conv1D(filters=32, kernel_size = 3, activation = 'relu'))
-model.add(MaxPooling1D(pool_size=2, padding = 'same'))
+model.add(BatchNormalization())
 model.add(Flatten())
+model.add(Dropout(0.5))
+model.add(Dense(36, activation='relu', kernel_initializer='he_normal'))
+model.add(Dropout(0.25))
 model.add(Dense(18, activation='relu', kernel_initializer='he_normal'))
 model.add(Dense(3, activation='softmax', kernel_initializer='he_normal'))
 model.compile(optimizer='adam', loss = 'categorical_crossentropy', metrics=['accuracy'])
 adam = optimizers.Adam(lr = 0.01)
-hist = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=50, verbose=1)
+hist = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=10, verbose=1)
 
 test_data = get_test_data()
 test_data = (test_data - mean) / std

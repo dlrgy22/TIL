@@ -51,7 +51,7 @@ model.add(Dense(9, activation='relu', kernel_initializer='he_normal'))
 model.add(Dense(3, activation='softmax', kernel_initializer='he_normal'))
 model.compile(optimizer='adam', loss = 'categorical_crossentropy', metrics=['accuracy'])
 adam = optimizers.Adam(lr = 0.01)
-hist = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=500, verbose=1)
+hist = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=10000, verbose=1)
 
 test_data = get_test_data()
 test_data = (test_data - mean) / std
