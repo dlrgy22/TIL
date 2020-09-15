@@ -1,12 +1,12 @@
 import numpy as np
 import pandas as pd
-from sklearn import metrics
+
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Flatten
-from keras.layers import BatchNormalization
 from keras.utils import to_categorical
 from keras import optimizers
+from imblearn.over_sampling import *
 
 
 def make_submission(classification):
@@ -18,10 +18,12 @@ def make_submission(classification):
     file_name = "submission.csv"
     np.savetxt(file_name, data, fmt="%s", delimiter=",")
 
+
 def get_test_data():
     df = pd.read_csv('test.csv')
     celestial_data = df.values[:, 1:]
     return celestial_data
+
 
 def get_train_data():
     df = pd.read_csv('train.csv')
@@ -34,7 +36,7 @@ def add_feature(x_train):
     first = [0, 1, 2, 3, 4]
     for i in range(len(first)):
         for j in range(i + 1, len(first)):
-            new = x_train[:,first[i]] - x_train[:,first[j]]
+            new = x_train[:, first[i]] - x_train[:, first[j]]
             new = new.reshape(-1, 1)
             x_train = np.hstack((x_train, new))
     second = [6, 7, 8, 9, 10]
@@ -49,7 +51,6 @@ def add_feature(x_train):
         new = new.reshape(-1, 1)
         x_train = np.hstack((x_train, new))
 
-
     new = x_train[:, 11] - x_train[:, 12]
     new = new.reshape(-1, 1)
     x_train = np.hstack((x_train, new))
@@ -57,9 +58,10 @@ def add_feature(x_train):
 
 
 x_train, y_train = get_train_data()
+x_train, y_train = SMOTE(random_state=4).fit_sample(x_train, y_train)
 x_train = add_feature(x_train)
-mean = x_train.mean(axis = 0)
-std = x_train.std(axis = 0)
+mean = x_train.mean(axis=0)
+std = x_train.std(axis=0)
 x_train = (x_train - mean) / std
 y_train = to_categorical(y_train, num_classes=3)
 
@@ -71,21 +73,24 @@ y_train = y_train[1000:]
 x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
 x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
 
-
+print(len(x_train))
+BATCH_SIZE = 32
 model = Sequential()
 model.add(Flatten())
 model.add(Dense(44, activation='relu', kernel_initializer='he_normal'))
 model.add(Dense(22, activation='relu', kernel_initializer='he_normal'))
 model.add(Dense(3, activation='softmax', kernel_initializer='he_normal'))
-model.compile(optimizer='adam', loss = 'categorical_crossentropy', metrics=['accuracy'])
-adam = optimizers.Adam(lr = 0.001)
-hist = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=100, verbose=1)
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+adam = optimizers.Adam(lr=0.001)
+hist = model.fit(x_train, y_train, steps_per_epoch=len(x_train)//BATCH_SIZE, validation_data=(x_test, y_test),
+                 validation_steps = len(x_train[1])//BATCH_SIZE, epochs=10, verbose=1)
 
 test_data = get_test_data()
+test_data   = add_feature(test_data)
 test_data = (test_data - mean) / std
 test_data = test_data.reshape((test_data.shape[0], test_data.shape[1], 1))
 
-pred = model.predict(test_data, verbose = 1)
+pred = model.predict(test_data, verbose=1)
 length = len(pred)
 result = []
 for i in range(length):
