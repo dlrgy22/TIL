@@ -1,100 +1,57 @@
 import numpy as np
 import pandas as pd
-
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Flatten
 from keras.utils import to_categorical
 from keras import optimizers
-from imblearn.over_sampling import *
-
-
-def make_submission(classification):
-    head = ['id', 'class']
-    data = []
-    for i in range(len(classification)):
-        data.append([320000 + i, classification[i]])
-    data = np.vstack((head, data))
-    file_name = "submission.csv"
-    np.savetxt(file_name, data, fmt="%s", delimiter=",")
+from matplotlib import pyplot as plt
 
 
 def get_test_data():
-    df = pd.read_csv('test.csv')
-    celestial_data = df.values[:, 1:]
-    return celestial_data
-
-
-def get_train_data():
     df = pd.read_csv('train.csv')
+    idx = df[df['i'] < 0].index
+    df = df.drop(idx)
+    Classification_data = df['class']
+    df = df.drop('class', axis=1)
+
+    df['d_dered_u'] = df['dered_u'] - df['u']
+    df['d_dered_g'] = df['dered_g'] - df['g']
+    df['d_dered_r'] = df['dered_r'] - df['r']
+    df['d_dered_i'] = df['dered_i'] - df['i']
+    df['d_dered_z'] = df['dered_z'] - df['z']
+
+    df['d_dered_rg'] = df['dered_r'] - df['dered_g']
+    df['d_dered_ig'] = df['dered_i'] - df['dered_g']
+    df['d_dered_zg'] = df['dered_z'] - df['dered_g']
+    df['d_dered_ri'] = df['dered_r'] - df['dered_i']
+    df['d_dered_rz'] = df['dered_r'] - df['dered_z']
+    df['d_dered_iz'] = df['dered_i'] - df['dered_z']
+    df.drop(
+        ['airmass_z', 'airmass_i', 'airmass_r', 'airmass_g','nDetect'],
+        axis=1, inplace=True)
+
     celestial_data = df.values[:, 1:-1]
-    Classification_data = df.values[:, -1]
+
 
     return celestial_data, Classification_data
 
-def add_feature(x_train):
-    first = [0, 1, 2, 3, 4]
-    for i in range(len(first)):
-        for j in range(i + 1, len(first)):
-            new = x_train[:, first[i]] - x_train[:, first[j]]
-            new = new.reshape(-1, 1)
-            x_train = np.hstack((x_train, new))
-    second = [6, 7, 8, 9, 10]
-    for i in range(len(second)):
-        for j in range(i + 1, len(second)):
-            new = x_train[:, second[i]] - x_train[:, second[j]]
-            new = new.reshape(-1, 1)
-            x_train = np.hstack((x_train, new))
-
-    for i in range(5):
-        new = x_train[:, 6 + i] - x_train[:, i]
-        new = new.reshape(-1, 1)
-        x_train = np.hstack((x_train, new))
-
-    new = x_train[:, 11] - x_train[:, 12]
-    new = new.reshape(-1, 1)
-    x_train = np.hstack((x_train, new))
-    return x_train
-
-
-x_train, y_train = get_train_data()
-x_train, y_train = SMOTE(random_state=4).fit_sample(x_train, y_train)
-x_train = add_feature(x_train)
+x_train, y_train = get_test_data()
 mean = x_train.mean(axis=0)
 std = x_train.std(axis=0)
 x_train = (x_train - mean) / std
+x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
 y_train = to_categorical(y_train, num_classes=3)
 
-
-x_test = x_train[:1000]
-y_test = y_train[:1000]
-x_train = x_train[1000:]
-y_train = y_train[1000:]
-x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
-x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
-
-print(len(x_train))
-BATCH_SIZE = 32
 model = Sequential()
 model.add(Flatten())
-model.add(Dense(44, activation='relu', kernel_initializer='he_normal'))
-model.add(Dense(22, activation='relu', kernel_initializer='he_normal'))
+model.add(Dense(88, activation='relu', kernel_initializer='he_normal'))
 model.add(Dense(3, activation='softmax', kernel_initializer='he_normal'))
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-adam = optimizers.Adam(lr=0.001)
-hist = model.fit(x_train, y_train, steps_per_epoch=len(x_train)//BATCH_SIZE, validation_data=(x_test, y_test),
-                 validation_steps = len(x_train[1])//BATCH_SIZE, epochs=10, verbose=1)
+adam = optimizers.Adam(lr=0.3)
+hist = model.fit(x_train, y_train, batch_size=64, epochs=50, verbose=1)
 
-test_data = get_test_data()
-test_data   = add_feature(test_data)
-test_data = (test_data - mean) / std
-test_data = test_data.reshape((test_data.shape[0], test_data.shape[1], 1))
-
-pred = model.predict(test_data, verbose=1)
-length = len(pred)
-result = []
-for i in range(length):
-    result.append(np.argmax(pred[i]))
-
-make_submission(result)
-print(result)
+plt.plot(hist.history['loss'])
+plt.show()
+plt.plot(hist.history['acc'])
+plt.show()
