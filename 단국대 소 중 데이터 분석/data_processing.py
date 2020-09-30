@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from keras.utils import to_categorical
+from sklearn.model_selection import train_test_split
+
 
 def get_data(path):
     df = pd.read_csv(path)
@@ -51,3 +53,7 @@ def one_hot(y_train):
     y_one_hot = to_categorical(y_train, num_classes=3)
     y_one_hot.reshape((y_one_hot.shape[0], y_one_hot.shape[1], 1))
     return y_one_hot
+
+def split_val_data(x_train, y_train):
+    x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.05, random_state=1234)
+    return x_train, y_train, x_val, y_val

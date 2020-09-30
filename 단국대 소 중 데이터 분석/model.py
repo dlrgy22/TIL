@@ -7,6 +7,7 @@ from keras.layers import Dropout
 from keras.layers import BatchNormalization
 from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
+from sklearn.model_selection import train_test_split
 import numpy as np
 
 class NN_model:
@@ -25,11 +26,12 @@ class NN_model:
         self.model.add(Dense(3, activation='softmax', kernel_initializer='he_normal'))
         adam = optimizers.Adam(lr=0.01)
         self.model.compile(optimizer=adam, loss='categorical_crossentropy', metrics=['accuracy'])
-        self.hist = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), batch_size=64, epochs=10, verbose=2)
+        self.hist = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), batch_size=64, epochs=30, verbose=2)
 
     def plot_hist(self):
         plt.plot(self.hist.history['loss'])
-        plt.plot(self.hist.history['acc'])
+        plt.show()
+        plt.plot(self.hist.history['accuracy'])
         plt.show()
 
     def predict(self):
@@ -64,7 +66,8 @@ class CNN_model:
 
     def plot_hist(self):
         plt.plot(self.hist.history['loss'])
-        plt.plot(self.hist.history['acc'])
+        plt.show()
+        plt.plot(self.hist.history['accuracy'])
         plt.show()
 
     def predict(self):
