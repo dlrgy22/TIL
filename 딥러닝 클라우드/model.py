@@ -19,17 +19,24 @@ class NN_model:
 
     def train(self):
         self.model = Sequential()
-        self.model.add(Dense(138, activation='relu', kernel_initializer='he_normal'))
-        self.model.add(Dense(46, activation='relu', kernel_initializer='he_normal'))
+        self.model.add(Dense(512, activation='relu', kernel_initializer='he_normal'))
+        self.model.add(Dropout(0.4))
+        self.model.add(Dense(256, activation='relu', kernel_initializer='he_normal'))
+        self.model.add(Dropout(0.4))
         self.model.add(Dense(6, activation='softmax', kernel_initializer='he_normal'))
-        adam = optimizers.Adam(lr=0.01)
+        adam = optimizers.Adam(lr=0.005)
         self.model.compile(optimizer=adam, loss='categorical_crossentropy', metrics=['accuracy'])
-        self.hist = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), batch_size=64, epochs=30, verbose=2)
+        self.hist = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), batch_size=64, epochs=100, verbose=2)
 
     def plot_hist(self):
+        print(self.hist.history)
+
         plt.plot(self.hist.history['loss'])
+        plt.plot(self.hist.history['val_loss'])
         plt.show()
+
         plt.plot(self.hist.history['accuracy'])
+        plt.plot(self.hist.history['val_accuracy'])
         plt.show()
 
     def predict(self):
@@ -39,3 +46,41 @@ class NN_model:
         for i in range(self.length):
             self.result.append(np.argmax(self.pred[i]))
         return self.result
+
+
+class CNN_model:
+    def __init__(self, x_train, y_train,x_val, y_val):
+        self.x_train = x_train
+        self.y_train = y_train
+        self.x_val = x_val
+        self.y_val = y_val
+
+
+    def train(self):
+        self.model = Sequential()
+        self.model.add(Conv1D(filters=32, kernel_size=3, activation='relu', input_shape=(31, 1)))
+        self.model.add(MaxPooling1D(pool_size=2, padding='same'))
+        self.model.add(Dropout(0.25))
+        self.model.add(Conv1D(filters=128, kernel_size=3, activation='relu'))
+        self.model.add(MaxPooling1D(pool_size=2, padding='same'))
+        self.model.add(Dropout(0.25))
+        self.model.add(Flatten())
+        self.model.add(Dense(138, activation='relu', kernel_initializer='he_normal'))
+        self.model.add(Dropout(0.4))
+        self.model.add(Dense(46, activation='relu', kernel_initializer='he_normal'))
+        self.model.add(Dropout(0.4))
+        self.model.add(Dense(6, activation='softmax', kernel_initializer='he_normal'))
+        adam = optimizers.Adam(lr=0.001)
+        self.model.compile(optimizer=adam, loss='categorical_crossentropy', metrics=['accuracy'])
+        self.hist = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), epochs=100, verbose=2)
+
+    def plot_hist(self):
+        print(self.hist.history)
+
+        plt.plot(self.hist.history['loss'])
+        plt.plot(self.hist.history['val_loss'])
+        plt.show()
+
+        plt.plot(self.hist.history['accuracy'])
+        plt.plot(self.hist.history['val_accuracy'])
+        plt.show()
