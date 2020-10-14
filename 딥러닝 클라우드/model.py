@@ -8,6 +8,7 @@ from keras.layers import BatchNormalization
 from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
 import numpy as np
+from sklearn.model_selection import  KFold
 
 class NN_model:
     def __init__(self, x_train, y_train, x_val, y_val):
@@ -19,12 +20,14 @@ class NN_model:
 
     def train(self):
         self.model = Sequential()
+        # self.model.add(Dense(1024, activation='relu', kernel_initializer='he_normal'))
+        # self.model.add(Dropout(0.5))
         self.model.add(Dense(512, activation='relu', kernel_initializer='he_normal'))
-        self.model.add(Dropout(0.4))
+        self.model.add(Dropout(0.5))
         self.model.add(Dense(256, activation='relu', kernel_initializer='he_normal'))
-        self.model.add(Dropout(0.4))
+        self.model.add(Dropout(0.5))
         self.model.add(Dense(6, activation='softmax', kernel_initializer='he_normal'))
-        adam = optimizers.Adam(lr=0.005)
+        adam = optimizers.Adam(lr=0.001 )
         self.model.compile(optimizer=adam, loss='categorical_crossentropy', metrics=['accuracy'])
         self.hist = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), batch_size=64, epochs=100, verbose=2)
 
@@ -48,6 +51,7 @@ class NN_model:
         return self.result
 
 
+
 class CNN_model:
     def __init__(self, x_train, y_train,x_val, y_val):
         self.x_train = x_train
@@ -58,18 +62,27 @@ class CNN_model:
 
     def train(self):
         self.model = Sequential()
-        self.model.add(Conv1D(filters=32, kernel_size=3, activation='relu', input_shape=(31, 1)))
+        self.model.add(Conv1D(filters=32, kernel_size=3, activation='relu', kernel_initializer='he_uniform', input_shape=(31, 1)))
         self.model.add(MaxPooling1D(pool_size=2, padding='same'))
-        self.model.add(Dropout(0.25))
-        self.model.add(Conv1D(filters=128, kernel_size=3, activation='relu'))
+        self.model.add(BatchNormalization())
+        self.model.add(Dropout(0.2))
+
+        self.model.add(Conv1D(filters=32, kernel_size=3, activation='relu', kernel_initializer='he_uniform'))
         self.model.add(MaxPooling1D(pool_size=2, padding='same'))
-        self.model.add(Dropout(0.25))
+        self.model.add(BatchNormalization())
+        self.model.add(Dropout(0.2))
+
+        self.model.add(Conv1D(filters=64, kernel_size=3, activation='relu', kernel_initializer='he_uniform'))
+        self.model.add(MaxPooling1D(pool_size=2, padding='same'))
+        self.model.add(BatchNormalization())
+        self.model.add(Dropout(0.2))
+
         self.model.add(Flatten())
-        self.model.add(Dense(138, activation='relu', kernel_initializer='he_normal'))
-        self.model.add(Dropout(0.4))
-        self.model.add(Dense(46, activation='relu', kernel_initializer='he_normal'))
-        self.model.add(Dropout(0.4))
-        self.model.add(Dense(6, activation='softmax', kernel_initializer='he_normal'))
+        self.model.add(Dense(138, activation='relu', kernel_initializer='he_uniform'))
+        self.model.add(Dropout(0.3))
+        self.model.add(Dense(46, activation='relu', kernel_initializer='he_uniform'))
+        #self.model.add(Dropout(0.1))
+        self.model.add(Dense(6, activation='softmax', kernel_initializer='he_uniform'))
         adam = optimizers.Adam(lr=0.001)
         self.model.compile(optimizer=adam, loss='categorical_crossentropy', metrics=['accuracy'])
         self.hist = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), epochs=100, verbose=2)
