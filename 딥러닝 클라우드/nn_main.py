@@ -13,14 +13,17 @@ def cross_validation(x_data, y_data):
         y_train, y_test = y_data[train_idx], y_data[test_idx]
         Model = model.NN_model(x_train, y_train, x_test, y_test)
         Model.train()
-        acc = Model.hist.history['accuracy'][-1]
-        val_acc[no] = Model.hist.history['val_accuracy'][-1]
+        # acc = Model.hist.history['accuracy'][-1]
+        # val_acc[no] = Model.hist.history['val_accuracy'][-1]
+        acc = Model.hist.history['acc'][-1]
+        val_acc[no] = Model.hist.history['val_acc'][-1]
         no += 1
 
     return np.mean(acc), np.mean(val_acc)
 
+
 path = './trainset.csv'
-x_data, y_data = data_processing.get_data(path)
+x_data, y_data, f_name = data_processing.get_data(path)
 x_data = data_processing.std_scale(x_data)
 y_data = data_processing.one_hot(y_data)
 print(cross_validation(x_data, y_data))

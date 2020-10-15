@@ -8,7 +8,9 @@ from keras.layers import BatchNormalization
 from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
 import numpy as np
-from sklearn.model_selection import  KFold
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
+
 
 class NN_model:
     def __init__(self, x_train, y_train, x_val, y_val):
@@ -32,14 +34,16 @@ class NN_model:
         self.hist = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), batch_size=64, epochs=100, verbose=2)
 
     def plot_hist(self):
-        print(self.hist.history)
+
 
         plt.plot(self.hist.history['loss'])
         plt.plot(self.hist.history['val_loss'])
         plt.show()
 
-        plt.plot(self.hist.history['accuracy'])
-        plt.plot(self.hist.history['val_accuracy'])
+        # plt.plot(self.hist.history['accuracy'])
+        # plt.plot(self.hist.history['val_accuracy'])
+        plt.plot(self.hist.history['acc'])
+        plt.plot(self.hist.history['val_acc'])
         plt.show()
 
     def predict(self):
@@ -62,7 +66,7 @@ class CNN_model:
 
     def train(self):
         self.model = Sequential()
-        self.model.add(Conv1D(filters=32, kernel_size=3, activation='relu', kernel_initializer='he_uniform', input_shape=(31, 1)))
+        self.model.add(Conv1D(filters=32, kernel_size=3, activation='relu', kernel_initializer='he_uniform', input_shape=(19,1)))
         self.model.add(MaxPooling1D(pool_size=2, padding='same'))
         self.model.add(BatchNormalization())
         self.model.add(Dropout(0.2))
@@ -83,7 +87,7 @@ class CNN_model:
         self.model.add(Dense(46, activation='relu', kernel_initializer='he_uniform'))
         #self.model.add(Dropout(0.1))
         self.model.add(Dense(6, activation='softmax', kernel_initializer='he_uniform'))
-        adam = optimizers.Adam(lr=0.001)
+        adam = optimizers.Adam(lr=0.0005)
         self.model.compile(optimizer=adam, loss='categorical_crossentropy', metrics=['accuracy'])
         self.hist = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), epochs=100, verbose=2)
 
@@ -97,3 +101,23 @@ class CNN_model:
         plt.plot(self.hist.history['accuracy'])
         plt.plot(self.hist.history['val_accuracy'])
         plt.show()
+
+
+class RF:
+    def __init__(self, x_train, y_train, x_val, y_val):
+        self.x_train = x_train
+        self.y_train = y_train
+        self.x_val = x_val
+        self.y_val = y_val
+
+    def train(self):
+        self.model = RandomForestClassifier(n_estimators=300, random_state=1234, max_depth=7)
+        self.model.fit(self.x_train, self.y_train)
+
+    def acc(self):
+        self.pred_train = self.model.predict(self.x_train)
+        self.pred_test = self.model.predict(self.x_val)
+        self.train_acc = metrics.accuracy_score(self.pred_train, self.y_train)
+        self.test_acc = metrics.accuracy_score(self.pred_test, self.y_val)
+
+        return self.train_acc, self.test_acc
