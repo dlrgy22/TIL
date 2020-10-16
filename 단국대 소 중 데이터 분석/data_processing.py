@@ -40,7 +40,7 @@ def make_submission(classification):
     for i in range(len(classification)):
         data.append([320000 + i, classification[i]])
     data = np.vstack((head, data))
-    file_name = "submission.csv"
+    file_name = "32164193_정익효.csv"
     np.savetxt(file_name, data, fmt="%s", delimiter=",")
 
 def std_scale(x_train, mean, std):

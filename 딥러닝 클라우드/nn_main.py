@@ -3,6 +3,24 @@ import model
 import numpy as np
 from sklearn.model_selection import KFold
 
+# def find_long(pred, y_test):
+#     CL = []
+#     for i in range(len(y_test)):
+#         CL.append(np.argmax(y_test[i]))
+#     arr1 = [0 for i in range(6)]
+#     arr2 = [0 for i in range(6)]
+#     total = [0 for i in range(6)]
+#     for i in range(len(pred)):
+#
+#         if pred[i] != CL[i]:
+#             arr1[pred[i]] += 1
+#             arr2[CL[i]] += 1
+#             print()
+#
+#     print(arr1)
+#     print(arr2)
+#     print(total)
+
 def cross_validation(x_data, y_data):
     kf = KFold(n_splits=10, random_state = 1234, shuffle = True)
     acc = np.zeros(10)
