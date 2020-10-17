@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.model_selection import KFold
 
 
-def cross_validation(x_data, y_data, test):
+def cross_validation(x_data, y_data):
     kf = KFold(n_splits=10, random_state = 1234, shuffle = True)
     acc_list = np.zeros(10)
     val_acc_list = np.zeros(10)
@@ -24,10 +24,11 @@ def cross_validation(x_data, y_data, test):
 
 path = './trainset.csv'
 x_data, y_data, name = data_processing.get_data(path)
-path  = './testset.csv'
-x_test = data_processing.get_data(path)
-x_data, x_test = data_processing.std_scale(x_data, x_test)
-print(cross_validation(x_data, y_data, x_test))
+# path  = './testset.csv'
+# x_test = data_processing.get_data(path)
+x_data= data_processing.std_scale(x_data)
+x_data = data_processing.pca(x_data, 10)
+print(cross_validation(x_data, y_data))
 # x_train, x_val, y_train, y_val = data_processing.split_val_data(x_data, y_data)
 # Model = model.XGB(x_train, y_train, x_val, y_val)
 # Model.train()

@@ -44,4 +44,5 @@ path = './trainset.csv'
 x_data, y_data, f_name = data_processing.get_data(path)
 x_data = data_processing.std_scale(x_data)
 y_data = data_processing.one_hot(y_data)
+x_data = data_processing.pca(x_data, 17)
 print(cross_validation(x_data, y_data))

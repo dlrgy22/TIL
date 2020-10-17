@@ -1,11 +1,14 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import StandardScaler
 from keras.utils import to_categorical
 from imblearn.over_sampling import SMOTE
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
 
 def get_data(path):
 
@@ -17,14 +20,12 @@ def get_data(path):
     else:
         x_data = df.values[:, :]
 
-
     if path == './trainset.csv':
         return x_data, y_data, df.columns[1:]
     else:
         return x_data
 
-def add_feature(x_data, x_test):
-    print(type(x_data))
+
 
 
 def split_val_data(x_data, y_data):
@@ -38,6 +39,17 @@ def std_scale(x_data, test_data = []):
 
     if len(test_data) != 0:
         test_data = standardScaler.transform(test_data)
+        return scaled_data, test_data
+
+    return scaled_data
+
+def robuster_scale(x_data, test_data = []):
+    robuster = RobustScaler()
+    robuster.fit(x_data)
+    scaled_data = robuster.transform(x_data)
+
+    if len(test_data) != 0:
+        test_data = robuster.transform(test_data)
         return scaled_data, test_data
 
     return scaled_data
@@ -88,5 +100,32 @@ def save_submission2(pred):
     np.savetxt(file_name, pred, fmt="%s", delimiter=",")
 
 
-path = './trainset.csv'
-get_data(path)
+def pca(x_data, components):
+    P = PCA(n_components=components)
+    printcipalComponents = P.fit_transform(x_data)
+    print(sum(P.explained_variance_ratio_))
+    principalDf = pd.DataFrame(data=printcipalComponents, columns=[str(i) for i in range(components)])
+    return principalDf.values
+
+# path = './trainset.csv'
+# x_data, y_data, name= get_data(path)
+# x_data = std_scale(x_data)
+#
+# x_data = pca(x_data)
+# fig, ax = plt.subplots(1,1,figsize=(5,5))
+
+# for i in range(len(x_data)):
+#     if y_data[i] == 'PH':
+#         ax.scatter(x_data[i][0], x_data[i][1], color='r', s=4)
+#     elif y_data[i] == 'HI':
+#         ax.scatter(x_data[i][0], x_data[i][1], color='g',s=4)
+#     elif y_data[i] == 'EL':
+#         ax.scatter(x_data[i][0], x_data[i][1], color='darkred',s=4)
+#     elif y_data[i] == 'CO':
+#         ax.scatter(x_data[i][0], x_data[i][1], color='dimgray',s=4)
+#     elif y_data[i] == 'GR':
+#         ax.scatter(x_data[i][0], x_data[i][1], color='aqua',s=4)
+#     elif y_data[i] == 'MI':
+#         ax.scatter(x_data[i][0], x_data[i][1], color='orange',s=4)
+
+plt.show()

@@ -3,8 +3,8 @@ from sklearn.ensemble import RandomForestClassifier
 import xgboost
 import data_processing
 
-model = xgboost.XGBClassifier()
-#model = RandomForestClassifier(n_estimators=100, random_state=1234, max_depth = 10)
+# model = xgboost.XGBClassifier()
+model = RandomForestClassifier(n_estimators=100, random_state=1234, max_depth = 10, max_features=5)
 path = './trainset.csv'
 x_data, y_data, name = data_processing.get_data(path)
 x_data = data_processing.std_scale(x_data)

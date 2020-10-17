@@ -42,21 +42,23 @@ def cross_validation(x_data, y_data):
 
 path = './trainset.csv'
 x_data, y_data, f_name = data_processing.get_data(path)
-x_data = data_processing.std_scale(x_data)
-#x_data, x_test = data_processing.std_scale(x_data, x_test)
+x_data = data_processing.robuster_scale(x_data)
 y_data = data_processing.one_hot(y_data)
 print(cross_validation(x_data, y_data))
 
-# x_data = x_data.reshape(4280, 31, -1)
-# print(x_data.shape)
-# print(cross_validation(x_data, y_data))
-#
+
 # path  = './testset.csv'
 # x_test = data_processing.get_data(path)
-# x_test = data_processing.std_scale(x_test)
+# print(x_data.shape)
+# x_data, y_data = data_processing.over_sampling(x_data, y_data)
+# #x_data, x_test = data_processing.std_scale(x_data, x_test)
+# x_data, x_test = data_processing.robuster_scale(x_data, x_test)
+# y_data = data_processing.one_hot(y_data)
+# x_data = x_data.reshape(6102, 31, -1)
 # x_test = x_test.reshape(1833, 31, -1)
-#
-# Model = model.CNN_model(x_data, y_data)
-# Model.train()
-# pred, percent = Model.predict(x_test)
-# data_processing.save_submission(pred)
+
+
+Model = model.CNN_model(x_data, y_data)
+Model.train()
+pred = Model.predict(x_test)
+data_processing.save_submission(pred)
