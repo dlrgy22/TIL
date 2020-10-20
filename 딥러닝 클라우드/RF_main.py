@@ -2,6 +2,7 @@ import data_processing
 import model
 import numpy as np
 from sklearn.model_selection import KFold
+from sklearn import preprocessing
 
 
 def cross_validation(x_data, y_data):
@@ -23,6 +24,7 @@ def cross_validation(x_data, y_data):
 
 path = './trainset.csv'
 x_data, y_data, name = data_processing.get_data(path)
-x_data = data_processing.std_scale(x_data)
+x_data = data_processing.robuster_scale(x_data)
+#x_data = data_processing.pca(x_data, 20)
 y_data = data_processing.one_hot(y_data)
 print(cross_validation(x_data, y_data))

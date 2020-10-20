@@ -9,16 +9,33 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+from sklearn import preprocessing
+from matplotlib import pyplot as plt
+
+import numpy as np
+
+import pandas as pd
+from sklearn.ensemble import IsolationForest
 
 def get_data(path):
 
     df = pd.read_csv(path)
+
+    # name = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+    # 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    # 'aa', 'ab', 'ac', 'ad', 'ae']
+
+    # for element in name:
+    #     df[element] = preprocessing.scale(np.log(df[element] + 1))
+    # print(df.describe())
 
     if path == './trainset.csv':
         y_data = df.values[:, 0]
         x_data = df.values[:, 1:]
     else:
         x_data = df.values[:, :]
+
+
 
     if path == './trainset.csv':
         return x_data, y_data, df.columns[1:]
@@ -100,15 +117,103 @@ def save_submission2(pred):
     np.savetxt(file_name, pred, fmt="%s", delimiter=",")
 
 
-def pca(x_data, components):
+def pca(x_data, components, x_test = []):
     P = PCA(n_components=components)
-    printcipalComponents = P.fit_transform(x_data)
-    print(sum(P.explained_variance_ratio_))
-    principalDf = pd.DataFrame(data=printcipalComponents, columns=[str(i) for i in range(components)])
-    return principalDf.values
+    train = P.fit_transform(x_data)
+    if len(x_test) != 0:
+        test = P.transform(x_test)
 
-# path = './trainset.csv'
-# x_data, y_data, name= get_data(path)
+    train_df = pd.DataFrame(data=train, columns=[str(i) for i in range(components)])
+    if len(x_test) == 0:
+        return train_df.values
+    else:
+        test_df = pd.DataFrame(data = test, columns = [str(i) for i in range(components)])
+        return train_df.values, test_df.values
+
+
+
+def anomaly(x_data, y_data):
+
+    PH = []
+    HI = []
+    EL = []
+    CO = []
+    GR = []
+    MI = []
+
+    for i in range(len(x_data)):
+        if y_data[i] == 'PH':
+            PH.append(x_data[i])
+        elif y_data[i] == 'HI':
+            HI.append(x_data[i])
+        elif y_data[i] == 'EL':
+            EL.append(x_data[i])
+        elif y_data[i] == 'CO':
+            CO.append(x_data[i])
+        elif y_data[i] == 'GR':
+            GR.append(x_data[i])
+        elif y_data[i] == 'MI':
+            MI.append(x_data[i])
+    PH = np.array(PH)
+    HI = np.array(HI)
+    EL = np.array(EL)
+    CO = np.array(CO)
+    GR = np.array(GR)
+    MI = np.array(MI)
+
+    clf = IsolationForest(n_estimators=100,
+                          max_samples=50,
+                          contamination=float(0.01),
+                          max_features=1.0,
+                          bootstrap=False,
+                          n_jobs=-1,
+                          random_state=1234,
+                          verbose=0,
+                          behaviour='deprecated')
+
+    clf.fit(PH)
+
+    y_data = []
+
+    pred = clf.predict(PH)
+    PH = PH[np.where(pred == 1)]
+
+    clf.fit(HI)
+    pred = clf.predict(HI)
+    HI = HI[np.where(pred == 1)]
+
+    clf.fit(EL)
+    pred = clf.predict(EL)
+    EL = EL[np.where(pred == 1)]
+
+    clf.fit(CO)
+    pred = clf.predict(CO)
+    CO = CO[np.where(pred == 1)]
+
+    clf.fit(GR)
+    pred = clf.predict(GR)
+    GR = GR[np.where(pred == 1)]
+
+    clf.fit(MI)
+    pred = clf.predict(MI)
+    MI = MI[np.where(pred == 1)]
+
+    name = [[PH, 'PH'], [HI, 'HI'], [EL, 'EL'], [CO, 'CO'], [GR, 'GR'], [MI, 'MI']]
+
+    for c, n in name:
+        for i in range(len(c)):
+            y_data.append(n)
+
+    x_data = np.concatenate((PH, HI, EL, CO, GR, MI), axis=0)
+    y_data = np.array(y_data)
+
+    return x_data, y_data
+
+
+path = './trainset.csv'
+x_data, y_data, name= get_data(path)
+anomaly(x_data, y_data)
+
 # x_data = std_scale(x_data)
 #
 # x_data = pca(x_data)
@@ -128,4 +233,3 @@ def pca(x_data, components):
 #     elif y_data[i] == 'MI':
 #         ax.scatter(x_data[i][0], x_data[i][1], color='orange',s=4)
 
-plt.show()

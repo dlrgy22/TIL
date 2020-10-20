@@ -10,6 +10,7 @@ def cross_validation(x_data, y_data, C_val, gamma_val):
     val_acc_list = np.zeros(10)
     no = 0
     for train_idx, test_idx in kf.split(x_data):
+
         x_train, x_test = x_data[train_idx], x_data[test_idx]
         y_train, y_test = y_data[train_idx], y_data[test_idx]
         Model = model.SVM(x_train, y_train, x_test, y_test)
@@ -27,19 +28,18 @@ x_data, y_data, name= data_processing.get_data(path)
 x_data = data_processing.std_scale(x_data)
 
 high_avg = 0
+train_x = data_processing.pca(x_data, 10)
+C_list = [10, 30, 100, 300, 1000, 3000, 10000, 30000]
+gamma_list = [0.01, 0.03, 0.1, 0.3, 1.0, 3.0]
 
-for i in range(2,30):
-    train_x = data_processing.pca(x_data, i)
-    C_list = np.arange(0.1, 1, 0.1)
-    gamma_list = np.arange(0.1, 1, 0.1)
+for C_val in C_list:
+    for gamma_val in gamma_list:
+        acc, val_acc = cross_validation(train_x, y_data, C_val, gamma_val)
+        print(acc, val_acc, C_val, gamma_val)
+        if val_acc > high_avg:
+            high_avg = val_acc
+            parm = [C_val, gamma_val]
 
-    for C_val in C_list:
-        for gamma_val in gamma_list:
-            acc, val_acc = cross_validation(train_x, y_data, C_val, gamma_val)
-            print(acc, val_acc)
-            if val_acc > high_avg:
-                high_avg = val_acc
-                parm = [i, C_val, gamma_val]
 print(high_avg)
 print(parm)
 
