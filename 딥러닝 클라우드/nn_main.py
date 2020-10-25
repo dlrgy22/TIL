@@ -21,47 +21,35 @@ from sklearn.model_selection import KFold
 #     print(total)
 
 
-# def cross_validation(x_data, y_data):
-#     kf = KFold(n_splits=5, random_state = 1234, shuffle = True)
-#     acc = np.zeros(5)
-#     val_acc = np.zeros(5)
-#     no = 0
-#     for train_idx, test_idx in kf.split(x_data):
-#         x_train, x_test = x_data[train_idx], x_data[test_idx]
-#         y_train, y_test = y_data[train_idx], y_data[test_idx]
-#         print(len(x_train), len(y_train))
-#         x_train, y_train = data_processing.over_sampling(x_train, y_train)
-#         print(len(x_train), len(y_train))
-#         Model = model.NN_model(x_train, y_train, x_test, y_test)
-#         Model.train()
-#         # acc = Model.hist.history['accuracy'][-1]
-#         # val_acc[no] = Model.hist.history['val_accuracy'][-1]
-#         acc = Model.hist.history['acc'][-1]
-#         val_acc[no] = Model.hist.history['val_acc'][-1]
-#
-#         no += 1
-#
-#     return np.mean(acc), np.mean(val_acc)
+def cross_validation(x_data, y_data):
+    kf = KFold(n_splits=5, random_state = 1234, shuffle = True)
+    acc = np.zeros(5)
+    val_acc = np.zeros(5)
+    no = 0
+    for train_idx, test_idx in kf.split(x_data):
+        x_train, x_test = x_data[train_idx], x_data[test_idx]
+        y_train, y_test = y_data[train_idx], y_data[test_idx]
+        print(len(x_train), len(y_train))
+        x_train, y_train = data_processing.over_sampling(x_train, y_train)
+        print(len(x_train), len(y_train))
+        Model = model.NN_model(x_train, y_train, x_test, y_test)
+        Model.train()
+        # acc = Model.hist.history['accuracy'][-1]
+        # val_acc[no] = Model.hist.history['val_accuracy'][-1]
+        acc = Model.hist.history['acc'][-1]
+        val_acc[no] = Model.hist.history['val_acc'][-1]
+
+        no += 1
+
+    return np.mean(acc), np.mean(val_acc)
 
 
 path = './trainset.csv'
 x_data, y_data, f_name = data_processing.get_data(path)
-x_train, x_val, y_train, y_val = data_processing.split_val_data(x_data, y_data)
-
-x_train, x_val = data_processing.std_scale(x_train, x_val)
-
-
-#x_train, x_val = data_processing.pca(x_train, 10, x_val)
-x_train, y_train = data_processing.anomaly(x_train, y_train)
-
-y_train = data_processing.one_hot(y_train)
-y_val = data_processing.one_hot(y_val)
-
-Model = model.NN_model(x_train, y_train, x_val, y_val)
-Model.train()
-
-
-#print(cross_validation(x_data, y_data))
+x_data = data_processing.pca(x_data, 10)
+x_data = data_processing.std_scale(x_data)
+y_data = data_processing.one_hot(y_data)
+print(cross_validation(x_data, y_data))
 
 
 

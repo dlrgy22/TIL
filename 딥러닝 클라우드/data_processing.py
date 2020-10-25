@@ -161,9 +161,9 @@ def anomaly(x_data, y_data):
     GR = np.array(GR)
     MI = np.array(MI)
 
-    clf = IsolationForest(n_estimators=100,
+    clf = IsolationForest(n_estimators=300,
                           max_samples=50,
-                          contamination=float(0.01),
+                          contamination=float(0.05),
                           max_features=1.0,
                           bootstrap=False,
                           n_jobs=-1,
