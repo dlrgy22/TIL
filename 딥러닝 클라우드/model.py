@@ -122,11 +122,12 @@ class RF:
         self.y_val = y_val
 
     def train(self):
-        self.model = RandomForestClassifier(n_estimators=400,
+        self.model = RandomForestClassifier(n_estimators=200,
                                             random_state=1234,
                                             max_features='sqrt',
                                             min_samples_split=2,
-                                            min_samples_leaf=1
+                                            min_samples_leaf=1,
+                                            bootstrap=False,
                                             )
         self.model.fit(self.x_train, self.y_train)
 
