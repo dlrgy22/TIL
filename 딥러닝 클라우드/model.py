@@ -141,6 +141,11 @@ class RF:
 
         return self.train_acc
 
+    def predict(self, test_data):
+        pred = self.model.predict(test_data)
+        return pred
+
+
 
 class XGB:
     def __init__(self, x_train, y_train, x_val = [], y_val = []):
