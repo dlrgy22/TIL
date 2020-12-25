@@ -1,17 +1,34 @@
-def solution(triangle):
-    dp = [[] for i in range(len(triangle))]
-    dp[0].append(triangle[0][0])
-    for i in range(1, len(triangle)):
-        for j in range(len(triangle[i])):
-            if j == 0:
-                dp[i].append(dp[i - 1][0] + triangle[i][0])
-            elif j == len(triangle[i]) - 1:
-                dp[i].append(dp[i - 1][j - 1] + triangle[i][j])
+from queue import PriorityQueue
+
+def solution(jobs):
+    answer = 0
+    heap = PriorityQueue()
+    jobs = sorted(jobs)
+    time = jobs[0][0]
+    i = 0
+    while i != len(jobs):
+        if jobs[i][0] <= time:
+            heap.put((jobs[i][1], jobs[i][0]))
+            i += 1
+        else:
+            if heap.qsize() != 0:
+                spend_time, input_time = heap.get()
+                time += spend_time
+                answer += time - input_time
+                if time > jobs[i][0]:
+                    heap.put((jobs[i][1], jobs[i][0]))
+                    i += 1
             else:
-                dp[i].append(max(dp[i - 1][j - 1] + triangle[i][j], dp[i - 1][j] + triangle[i][j]))
+                time = jobs[i][0]
+                heap.put((jobs[i][1], jobs[i][0]))
+                i += 1
 
-    answer = max(dp[len(triangle)- 1])
-    return answer
+    while heap.qsize() != 0:
+        spend_time, input_time = heap.get()
+        time += spend_time
+        answer += (time - input_time)
 
-triangle = [[7], [3, 8], [8, 1, 0], [2, 7, 4, 4], [4, 5, 2, 6, 5]]
-print(solution(triangle))
+
+    return answer // len(jobs)
+
+print(solution([[0, 10], [100, 10], [200, 10]]))
