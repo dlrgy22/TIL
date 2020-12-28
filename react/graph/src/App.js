@@ -60,7 +60,6 @@ class App extends Component {
 
     return (
       <div>
-        {this.state.Type}
         <button onClick={() => {this.changeType('fire')}}> fire </button>
         <button onClick={() => {this.changeType('move')}}> move </button>
         {
