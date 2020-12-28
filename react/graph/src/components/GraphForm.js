@@ -10,6 +10,7 @@ import {
 }from "react-vis"
 
 class GraphForm extends Component {
+    
     render() {
         const { data } = this.props
         return (

@@ -1,4 +1,3 @@
-
 async function run(client) {
     const { body } = await client.search({
         index : 'random_data'
@@ -13,11 +12,10 @@ async function run(client) {
 
 async function get_data(client) {
     const data = await run(client);
-    return data;
+    console.log(data)
 }
 
 const { Client } = require('@elastic/elasticsearch')
 const client = new Client({ node: 'http://localhost:9200', log : 'trace' })
 
 data = get_data(client)
-console.log(data)

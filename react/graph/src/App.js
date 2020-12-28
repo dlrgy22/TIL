@@ -41,15 +41,6 @@ class App extends Component {
     ],
     Type : null
   }
-  
-  // makeGraph = (value) => {
-  //   if (value === 'fire') {
-  //     return <GraphForm data={this.state.fire_data}/>
-  //   }
-  //   else if (value === 'move') {
-  //     return <GraphForm data={this.state.move_data}/>
-  //   }
-  // }
 
   changeType = (value) => {
     this.setState({
