@@ -1,21 +1,35 @@
 import sys
+import re
 from collections import deque
 
 t = int(sys.stdin.readline())
+r = re.compile(",|\[|\]")
 for i in range(t):
-    n, m = map(int, sys.stdin.readline().split())
-    q_list = list(map(int, sys.stdin.readline().split()))
-    q = deque()
-    for idx, element in enumerate(q_list):
-        q.appendleft([element, idx])
-    
-    count = 0
-    while len(q) != 0:
-        value, idx = q.pop()
-        if len(q) != 0 and value < max(q)[0]:
-            q.appendleft([value, idx])
+    back = False
+    functions = sys.stdin.readline()[:-1]
+    n = int(sys.stdin.readline())
+    input_list = sys.stdin.readline()[:-1]
+    input_list = list(map(int, r.sub(" ", input_list).split()))
+    for function in functions:
+        if function == "R":
+            back = not back
         else:
-            count += 1
-            if idx == m:
+            try:
+                if back:
+                    del input_list[-1]
+                else:
+                    del input_list[0]
+            except:
+                input_list = "error"
                 break
-    print(count)
+    if input_list == "error":
+        print("error")
+        continue
+    if back:
+        input_list = input_list[::-1]
+    print("[", end='')
+    for idx in range(len(input_list)):
+        print(input_list[idx], end='')
+        if idx != len(input_list) - 1:
+            print(",", end="")
+    print("]")
